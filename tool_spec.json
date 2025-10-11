@@ -1,0 +1,100 @@
+{
+  "name": "AaveConcierge",
+  "description": "A set of tools to interact with the Aave V3 protocol on behalf of a user. It can check loan health, supply assets, borrow assets, and repay debt.",
+  "tools": [
+    {
+      "name": "check_aave_health",
+      "description": "Checks the Aave V3 health factor for a user's loan position to see how close they are to liquidation. A health factor below 1.0 means the position can be liquidated.",
+      "api_spec": {
+        "endpoint": "/health/{user_address}",
+        "method": "GET",
+        "path_parameters": [
+          {
+            "name": "user_address",
+            "type": "string",
+            "description": "The wallet address of the user to check, e.g., '0x10c959Cf9994e95fc7354855c0f2Bd639E499179'."
+          }
+        ]
+      }
+    },
+    {
+      "name": "supply_assets_to_aave",
+      "description": "Supplies a specified amount of an asset (like USDC or WETH) to the Aave V3 protocol from the executor's wallet, crediting the deposit to the user's address.",
+      "api_spec": {
+        "endpoint": "/supply",
+        "method": "POST",
+        "request_body_schema": {
+          "type": "object",
+          "properties": {
+            "user_address": {
+              "type": "string",
+              "description": "The wallet address of the user who will receive the supplied assets (aTokens)."
+            },
+            "asset_symbol": {
+              "type": "string",
+              "description": "The symbol of the asset to supply, e.g., 'USDC' or 'WETH'."
+            },
+            "amount": {
+              "type": "number",
+              "description": "The amount of the asset to supply, e.g., 10.5."
+            }
+          },
+          "required": ["user_address", "asset_symbol", "amount"]
+        }
+      }
+    },
+    {
+      "name": "borrow_assets_from_aave",
+      "description": "Borrows a specified amount of an asset from the Aave V3 protocol. The user must have sufficient collateral and must have delegated borrow power to the executor wallet.",
+      "api_spec": {
+        "endpoint": "/borrow",
+        "method": "POST",
+        "request_body_schema": {
+          "type": "object",
+          "properties": {
+            "user_address": {
+              "type": "string",
+              "description": "The wallet address of the user who is borrowing."
+            },
+            "asset_symbol": {
+              "type": "string",
+              "description": "The symbol of the asset to borrow, e.g., 'USDC'."
+            },
+            "amount": {
+              "type": "number",
+              "description": "The amount of the asset to borrow."
+            },
+            "interest_rate_mode": {
+              "type": "integer",
+              "description": "The interest rate mode. Use 2 for Variable (most common) or 1 for Stable.",
+              "default": 2
+            }
+          },
+          "required": ["user_address", "asset_symbol", "amount"]
+        }
+      }
+    },
+    {
+      "name": "repay_aave_debt",
+      "description": "Repays a user's debt for a specific asset using funds from the executor wallet. It will automatically detect the debt type (stable or variable) and repay as much as the executor's balance allows.",
+      "api_spec": {
+        "endpoint": "/repay",
+        "method": "POST",
+        "request_body_schema": {
+          "type": "object",
+          "properties": {
+            "user_address": {
+              "type": "string",
+              "description": "The wallet address of the user whose debt will be repaid."
+            },
+            "asset_symbol": {
+              "type": "string",
+              "description": "The symbol of the asset to repay, e.g., 'USDC'."
+            }
+          },
+          "required": ["user_address", "asset_symbol"]
+        }
+      }
+    }
+  ]
+}
