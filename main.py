@@ -1,6 +1,5 @@
 import os
-import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from web3 import Web3
 from dotenv import load_dotenv
@@ -14,14 +13,20 @@ EXECUTOR_PRIVATE_KEY = os.getenv("EXECUTOR_PRIVATE_KEY")
 AAVE_POOL_ADDRESS_PROVIDER = os.getenv("AAVE_POOL_ADDRESS_PROVIDER_V3_BASE_SEPOLIA")
 
 if not all([ALCHEMY_API_KEY, EXECUTOR_PRIVATE_KEY, AAVE_POOL_ADDRESS_PROVIDER]):
-    raise ValueError("❌ Missing required .env variables (ALCHEMY_API_KEY, EXECUTOR_PRIVATE_KEY, AAVE_POOL_ADDRESS_PROVIDER_V3_BASE_SEPOLIA).")
+    raise ValueError("❌ Missing required .env variables.")
 
 # --- Web3 Connection ---
 w3 = Web3(Web3.HTTPProvider(f"https://base-sepolia.g.alchemy.com/v2/{ALCHEMY_API_KEY}"))
 executor_account = w3.eth.account.from_key(EXECUTOR_PRIVATE_KEY)
 print(f"✅ API Server starting with executor wallet: {executor_account.address}")
 
-# --- Aave Contract ABIs (Consolidated) ---
+# --- Asset Registry for AI Agent ---
+ASSET_REGISTRY = {
+    "USDC": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "WETH": "0x4200000000000000000000000000000000000006",
+}
+
+# --- Aave Contract ABIs ---
 POOL_ADDRESS_PROVIDER_ABI = '[{"inputs":[],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getPoolDataProvider","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]'
 AAVE_POOL_ABI = '[{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserAccountData","outputs":[{"internalType":"uint256","name":"totalCollateralBase","type":"uint256"},{"internalType":"uint256","name":"totalDebtBase","type":"uint256"},{"internalType":"uint256","name":"availableBorrowsBase","type":"uint256"},{"internalType":"uint256","name":"currentLiquidationThreshold","type":"uint256"},{"internalType":"uint256","name":"ltv","type":"uint256"},{"internalType":"uint256","name":"healthFactor","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"onBehalfOf","type":"address"},{"internalType":"uint16","name":"referralCode","type":"uint16"}],"name":"supply","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interestRateMode","type":"uint256"},{"internalType":"uint16","name":"referralCode","type":"uint16"},{"internalType":"address","name":"onBehalfOf","type":"address"}],"name":"borrow","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"rateMode","type":"uint256"},{"internalType":"address","name":"onBehalfOf","type":"address"}],"name":"repay","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"payable","type":"function"}]'
 AAVE_DATA_PROVIDER_ABI = '[{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"address","name":"user","type":"address"}],"name":"getUserReserveData","outputs":[{"internalType":"uint256","name":"currentATokenBalance","type":"uint256"},{"internalType":"uint256","name":"currentStableDebt","type":"uint256"},{"internalType":"uint256","name":"currentVariableDebt","type":"uint256"},{"internalType":"uint256","name":"principalStableDebt","type":"uint256"},{"internalType":"uint256","name":"scaledVariableDebt","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"uint256","name":"liquidityRate","type":"uint256"},{"internalType":"uint40","name":"stableRateLastUpdated","type":"uint40"},{"internalType":"bool","name":"usageAsCollateralEnabled","type":"bool"}],"stateMutability":"view","type":"function"}]'
@@ -36,168 +41,168 @@ data_provider = w3.eth.contract(address=data_provider_address, abi=AAVE_DATA_PRO
 print(f"📘 Aave Pool Address: {pool_address}")
 
 # --- 2. CORE AAVE LOGIC ---
-
 def get_health_factor(user_address: str):
-    """Fetches the health factor for a given user address."""
     user_data = pool_contract.functions.getUserAccountData(Web3.to_checksum_address(user_address)).call()
     return user_data[5] / 1e18
 
 def get_asset_decimals(asset_address: str):
-    """Gets the decimals for a given ERC20 token."""
     token_contract = w3.eth.contract(address=Web3.to_checksum_address(asset_address), abi=ERC20_ABI)
     return token_contract.functions.decimals().call()
 
 def execute_supply(user_address: str, asset_address: str, amount: float):
-    """The core supply logic."""
     user_checksum = Web3.to_checksum_address(user_address)
     asset_checksum = Web3.to_checksum_address(asset_address)
-    
     decimals = get_asset_decimals(asset_checksum)
     amount_in_wei = int(amount * (10**decimals))
-    
     asset_contract = w3.eth.contract(address=asset_checksum, abi=ERC20_ABI)
-    
-    # Check executor's balance
     executor_balance = asset_contract.functions.balanceOf(executor_account.address).call()
     if executor_balance < amount_in_wei:
         return {"status": "error", "message": f"Executor has insufficient balance to supply {amount}. Has: {executor_balance / (10**decimals)}"}
-
-    # Approve if necessary
     allowance = asset_contract.functions.allowance(executor_account.address, pool_address).call()
     if allowance < amount_in_wei:
-        print("🪙 Approving Pool to spend tokens for supply...")
         approve_tx = asset_contract.functions.approve(pool_address, amount_in_wei).build_transaction({
-            "from": executor_account.address, "chainId": 84532,
-            "nonce": w3.eth.get_transaction_count(executor_account.address)
+            "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
         })
         signed_approve = w3.eth.account.sign_transaction(approve_tx, EXECUTOR_PRIVATE_KEY)
         tx_hash_approve = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
         w3.eth.wait_for_transaction_receipt(tx_hash_approve)
-        print(f"✅ Supply approval confirmed: {tx_hash_approve.hex()}")
-
-    # Build and send supply transaction
-    supply_tx = pool_contract.functions.supply(
-        asset_checksum, amount_in_wei, user_checksum, 0
-    ).build_transaction({
-        "from": executor_account.address, "chainId": 84532,
-        "nonce": w3.eth.get_transaction_count(executor_account.address)
+    supply_tx = pool_contract.functions.supply(asset_checksum, amount_in_wei, user_checksum, 0).build_transaction({
+        "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
     })
     signed_tx = w3.eth.account.sign_transaction(supply_tx, EXECUTOR_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    print(f"💸 Supply transaction sent! Hash: {tx_hash.hex()}")
     w3.eth.wait_for_transaction_receipt(tx_hash)
     return {"status": "success", "message": "Supply transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
 def execute_borrow(user_address: str, asset_address: str, amount: float, rate_mode: int):
-    """The core borrow logic."""
-    print("⚠️ IMPORTANT: For borrow to succeed, the user must delegate borrowing power to the executor wallet.")
     user_checksum = Web3.to_checksum_address(user_address)
     asset_checksum = Web3.to_checksum_address(asset_address)
-
     decimals = get_asset_decimals(asset_checksum)
     amount_in_wei = int(amount * (10**decimals))
-
-    # Build and send borrow transaction
-    borrow_tx = pool_contract.functions.borrow(
-        asset_checksum, amount_in_wei, rate_mode, 0, user_checksum
-    ).build_transaction({
-        "from": executor_account.address, "chainId": 84532,
-        "nonce": w3.eth.get_transaction_count(executor_account.address)
+    borrow_tx = pool_contract.functions.borrow(asset_checksum, amount_in_wei, rate_mode, 0, user_checksum).build_transaction({
+        "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
     })
     signed_tx = w3.eth.account.sign_transaction(borrow_tx, EXECUTOR_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    print(f"💸 Borrow transaction sent! Hash: {tx_hash.hex()}")
     w3.eth.wait_for_transaction_receipt(tx_hash)
     return {"status": "success", "message": "Borrow transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
 def execute_repay(user_address: str, asset_address: str):
-    """The core repay logic, now with balance checks."""
     user_checksum = Web3.to_checksum_address(user_address)
     asset_checksum = Web3.to_checksum_address(asset_address)
-    
     data = data_provider.functions.getUserReserveData(asset_checksum, user_checksum).call()
     stable_debt, variable_debt = data[1], data[2]
     rate_mode = 1 if stable_debt > 0 else 2 if variable_debt > 0 else 0
-    if rate_mode == 0:
-        return {"status": "success", "message": "No active debt found to repay."}
-    
+    if rate_mode == 0: return {"status": "success", "message": "No active debt found to repay."}
     user_total_debt = stable_debt + variable_debt
     debt_token_contract = w3.eth.contract(address=asset_checksum, abi=ERC20_ABI)
     executor_balance = debt_token_contract.functions.balanceOf(executor_account.address).call()
-
-    if executor_balance == 0:
-        return {"status": "error", "message": "Executor wallet has zero balance for the specified asset."}
-
+    if executor_balance == 0: return {"status": "error", "message": "Executor wallet has zero balance for the specified asset."}
     amount_to_repay = min(user_total_debt, executor_balance)
-    
     allowance = debt_token_contract.functions.allowance(executor_account.address, pool_address).call()
     if allowance < amount_to_repay:
-        print("🪙 Approving Pool to spend tokens for repay...")
         approve_tx = debt_token_contract.functions.approve(pool_address, 2**256 - 1).build_transaction({
-            "from": executor_account.address, "chainId": 84532,
-            "nonce": w3.eth.get_transaction_count(executor_account.address)
+            "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
         })
         signed_approve = w3.eth.account.sign_transaction(approve_tx, EXECUTOR_PRIVATE_KEY)
         tx_hash_approve = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
         w3.eth.wait_for_transaction_receipt(tx_hash_approve)
-        print(f"✅ Repay approval confirmed: {tx_hash_approve.hex()}")
-
-    repay_tx = pool_contract.functions.repay(
-        asset_checksum, amount_to_repay, rate_mode, user_checksum
-    ).build_transaction({
-        "from": executor_account.address, "chainId": 84532,
-        "nonce": w3.eth.get_transaction_count(executor_account.address)
+    repay_tx = pool_contract.functions.repay(asset_checksum, amount_to_repay, rate_mode, user_checksum).build_transaction({
+        "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
     })
     signed_tx = w3.eth.account.sign_transaction(repay_tx, EXECUTOR_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    print(f"💸 Repay transaction sent! Hash: {tx_hash.hex()}")
     w3.eth.wait_for_transaction_receipt(tx_hash)
     return {"status": "success", "message": "Repay transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
-async def monitor_loan_task(user_address: str):
-    """The background monitoring task."""
-    print(f"✅ Background monitoring started for: {user_address}")
-    while True:
-        health = get_health_factor(user_address)
-        print(f"  [Monitor] Address: {user_address[:10]}... | Health Factor: {health:.4f}")
-        if 0 < health < 1.1:
-            print(f"🚨 DANGER! Health factor is {health:.4f}. Triggering auto-repay.")
-            asset_to_repay = os.getenv("DEBT_TOKEN_ADDRESS")
-            if asset_to_repay:
-                execute_repay(user_address, asset_to_repay)
-            else:
-                print("❌ Cannot auto-repay: DEBT_TOKEN_ADDRESS not set in .env")
-        await asyncio.sleep(60)
 
 # --- 3. API DEFINITION ---
 app = FastAPI(
-    title="Aave Guard API Suite",
-    description="A comprehensive API for interacting with Aave V3 on Base Sepolia, designed for AI agents.",
-    version="3.0.0", # Version updated
+    title="Aave Concierge API (MCP Compliant)",
+    description="A serverless API for executing Aave V3 actions, compliant with the Model Context Protocol.",
+    version="6.0.0",
 )
 
-# --- Pydantic Models for Request Bodies ---
+# --- NEW: MCP Discovery Endpoint ---
+@app.get("/mcp")
+def mcp_discovery():
+    """
+    The official discovery endpoint that describes this API's capabilities to an AI.
+    """
+    return {
+        "service": {
+            "name": "aave_concierge",
+            "display_name": "Aave Concierge",
+            "description": "An API to supply, borrow, repay, and check health on the Aave V3 protocol."
+        },
+        "resources": [
+            {
+                "name": "Loan",
+                "display_name": "Aave Loan",
+                "description": "Represents a user's loan position on Aave.",
+                "operations": [
+                    {
+                        "name": "check_health",
+                        "description": "Checks the health factor of a user's loan.",
+                        "http_handler": { "method": "GET", "path": "/health/{user_address}" },
+                        "parameters": [
+                            {"name": "user_address", "type": "string", "in": "path", "description": "The user's wallet address."}
+                        ]
+                    },
+                    {
+                        "name": "repay",
+                        "description": "Repays a user's debt for a specific asset.",
+                        "http_handler": { "method": "POST", "path": "/repay" },
+                        "parameters": [
+                             {"name": "user_address", "type": "string", "in": "body", "description": "The user's wallet address."},
+                             {"name": "asset_symbol", "type": "string", "in": "body", "description": "The symbol of the asset to repay, e.g., 'USDC'."}
+                        ]
+                    },
+                    {
+                        "name": "supply",
+                        "description": "Supplies an asset to Aave on behalf of a user.",
+                        "http_handler": { "method": "POST", "path": "/supply" },
+                         "parameters": [
+                             {"name": "user_address", "type": "string", "in": "body", "description": "The user's wallet address."},
+                             {"name": "asset_symbol", "type": "string", "in": "body", "description": "The symbol of the asset to supply, e.g., 'WETH'."},
+                             {"name": "amount", "type": "number", "in": "body", "description": "The amount to supply."}
+                        ]
+                    },
+                    {
+                        "name": "borrow",
+                        "description": "Borrows an asset from Aave for a user.",
+                        "http_handler": { "method": "POST", "path": "/borrow" },
+                        "parameters": [
+                             {"name": "user_address", "type": "string", "in": "body", "description": "The user's wallet address."},
+                             {"name": "asset_symbol", "type": "string", "in": "body", "description": "The symbol of the asset to borrow, e.g., 'USDC'."},
+                             {"name": "amount", "type": "number", "in": "body", "description": "The amount to borrow."}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+
+# --- Pydantic Models ---
 class HealthResponse(BaseModel):
     user_address: str
     health_factor: float
 
-class TxRequest(BaseModel):
+class TxRequestSymbol(BaseModel):
     user_address: str
-    asset_address: str
+    asset_symbol: str = Field(..., description="The symbol of the asset, e.g., 'USDC' or 'WETH'")
     amount: float
 
-class BorrowRequest(BaseModel):
+class BorrowRequestSymbol(BaseModel):
     user_address: str
-    asset_address: str
+    asset_symbol: str = Field(..., description="The symbol of the asset, e.g., 'USDC' or 'WETH'")
     amount: float
     interest_rate_mode: int = Field(default=2, description="1 for Stable, 2 for Variable")
 
-class RepayRequest(BaseModel):
+class RepayRequestSymbol(BaseModel):
     user_address: str
-    asset_address: str
-
-class MonitorRequest(BaseModel):
-    user_address: str
+    asset_symbol: str = Field(..., description="The symbol of the asset to repay, e.g., 'USDC'")
 
 class TxResponse(BaseModel):
     status: str
@@ -207,40 +212,39 @@ class TxResponse(BaseModel):
 # --- API Endpoints ---
 @app.get("/health/{user_address}", response_model=HealthResponse)
 async def check_health(user_address: str):
-    """Gets the current Aave health factor for a given wallet address."""
     health = get_health_factor(user_address)
     return HealthResponse(user_address=user_address, health_factor=health)
 
 @app.post("/supply", response_model=TxResponse)
-async def supply(req: TxRequest):
-    """Supplies an asset to the Aave pool on behalf of the user."""
+async def supply(req: TxRequestSymbol):
+    asset_address = ASSET_REGISTRY.get(req.asset_symbol.upper())
+    if not asset_address:
+        raise HTTPException(status_code=400, detail=f"Asset symbol '{req.asset_symbol}' not found.")
     try:
-        result = execute_supply(req.user_address, req.asset_address, req.amount)
+        result = execute_supply(req.user_address, asset_address, req.amount)
         return result
     except Exception as e:
-        return TxResponse(status="error", message=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @app.post("/borrow", response_model=TxResponse)
-async def borrow(req: BorrowRequest):
-    """Borrows an asset from the Aave pool for the user."""
+async def borrow(req: BorrowRequestSymbol):
+    asset_address = ASSET_REGISTRY.get(req.asset_symbol.upper())
+    if not asset_address:
+        raise HTTPException(status_code=400, detail=f"Asset symbol '{req.asset_symbol}' not found.")
     try:
-        result = execute_borrow(req.user_address, req.asset_address, req.amount, req.interest_rate_mode)
+        result = execute_borrow(req.user_address, asset_address, req.amount, req.interest_rate_mode)
         return result
     except Exception as e:
-        return TxResponse(status="error", message=f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
 @app.post("/repay", response_model=TxResponse)
-async def repay(req: RepayRequest):
-    """Repays a user's debt for a specific asset."""
+async def repay(req: RepayRequestSymbol):
+    asset_address = ASSET_REGISTRY.get(req.asset_symbol.upper())
+    if not asset_address:
+        raise HTTPException(status_code=400, detail=f"Asset symbol '{req.asset_symbol}' not found.")
     try:
-        result = execute_repay(req.user_address, req.asset_address)
+        result = execute_repay(req.user_address, asset_address)
         return result
     except Exception as e:
-        return TxResponse(status="error", message=f"An error occurred: {e}")
-
-@app.post("/monitor", response_model=TxResponse)
-async def monitor(req: MonitorRequest):
-    """Starts the 24/7 Aave Guard monitoring service for a user's loan."""
-    asyncio.create_task(monitor_loan_task(req.user_address))
-    return TxResponse(status="success", message=f"Aave Guard monitoring has been successfully started for {req.user_address}.")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
 
