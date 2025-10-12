@@ -340,7 +340,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For support, questions, or collaboration:
 - **Telegram:** [@kimchiigu](https://t.me/kimchiigu)
 - **Email:** christopher.hygunawan@gmail.com
-- **X/Twitter:** [@Kimchiigu73](https://twitter.com/Kimchiigu73)
+- **X/Twitter:** [@Kimchii73](https://twitter.com/Kimchii73)
 
 ---
 
