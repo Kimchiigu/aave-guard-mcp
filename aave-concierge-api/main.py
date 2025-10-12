@@ -1,4 +1,5 @@
 import os
+import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from web3 import Web3
@@ -11,6 +12,7 @@ load_dotenv()
 ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY")
 EXECUTOR_PRIVATE_KEY = os.getenv("EXECUTOR_PRIVATE_KEY")
 AAVE_POOL_ADDRESS_PROVIDER = os.getenv("AAVE_POOL_ADDRESS_PROVIDER_V3_BASE_SEPOLIA")
+HEDERA_LOGGER_API_URL = os.getenv("HEDERA_LOGGER_API_URL")
 
 if not all([ALCHEMY_API_KEY, EXECUTOR_PRIVATE_KEY, AAVE_POOL_ADDRESS_PROVIDER]):
     raise ValueError("❌ Missing required .env variables.")
@@ -27,6 +29,7 @@ ASSET_REGISTRY = {
 }
 
 # --- Aave Contract ABIs ---
+# (ABIs are unchanged, keeping them collapsed for brevity)
 POOL_ADDRESS_PROVIDER_ABI = '[{"inputs":[],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getPoolDataProvider","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}]'
 AAVE_POOL_ABI = '[{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getUserAccountData","outputs":[{"internalType":"uint256","name":"totalCollateralBase","type":"uint256"},{"internalType":"uint256","name":"totalDebtBase","type":"uint256"},{"internalType":"uint256","name":"availableBorrowsBase","type":"uint256"},{"internalType":"uint256","name":"currentLiquidationThreshold","type":"uint256"},{"internalType":"uint256","name":"ltv","type":"uint256"},{"internalType":"uint256","name":"healthFactor","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"address","name":"onBehalfOf","type":"address"},{"internalType":"uint16","name":"referralCode","type":"uint16"}],"name":"supply","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interestRateMode","type":"uint256"},{"internalType":"uint16","name":"referralCode","type":"uint16"},{"internalType":"address","name":"onBehalfOf","type":"address"}],"name":"borrow","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"rateMode","type":"uint256"},{"internalType":"address","name":"onBehalfOf","type":"address"}],"name":"repay","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"payable","type":"function"}]'
 AAVE_DATA_PROVIDER_ABI = '[{"inputs":[{"internalType":"address","name":"asset","type":"address"},{"internalType":"address","name":"user","type":"address"}],"name":"getUserReserveData","outputs":[{"internalType":"uint256","name":"currentATokenBalance","type":"uint256"},{"internalType":"uint256","name":"currentStableDebt","type":"uint256"},{"internalType":"uint256","name":"currentVariableDebt","type":"uint256"},{"internalType":"uint256","name":"principalStableDebt","type":"uint256"},{"internalType":"uint256","name":"scaledVariableDebt","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"uint256","name":"liquidityRate","type":"uint256"},{"internalType":"uint40","name":"stableRateLastUpdated","type":"uint40"},{"internalType":"bool","name":"usageAsCollateralEnabled","type":"bool"}],"stateMutability":"view","type":"function"}]'
@@ -40,7 +43,25 @@ pool_contract = w3.eth.contract(address=pool_address, abi=AAVE_POOL_ABI)
 data_provider = w3.eth.contract(address=data_provider_address, abi=AAVE_DATA_PROVIDER_ABI)
 print(f"📘 Aave Pool Address: {pool_address}")
 
-# --- 2. CORE AAVE LOGIC ---
+# --- 2. CORE LOGIC & HEDERA LOGGER ---
+
+def log_to_hedera(log_message: str):
+    """Sends a log message to the Hedera Logger microservice."""
+    if not HEDERA_LOGGER_API_URL:
+        print("🟡 HCS Log: HEDERA_LOGGER_API_URL not set. Skipping log.")
+        return
+
+    try:
+        response = requests.post(
+            HEDERA_LOGGER_API_URL,
+            json={"log_message": log_message},
+            timeout=10
+        )
+        response.raise_for_status()
+        print(f"✅ HCS Log successful: {response.json()}")
+    except requests.exceptions.RequestException as e:
+        print(f"🔴 HCS Log Error: Failed to connect to logger service. {e}")
+
 def get_health_factor(user_address: str):
     user_data = pool_contract.functions.getUserAccountData(Web3.to_checksum_address(user_address)).call()
     return user_data[5] / 1e18
@@ -49,15 +70,17 @@ def get_asset_decimals(asset_address: str):
     token_contract = w3.eth.contract(address=Web3.to_checksum_address(asset_address), abi=ERC20_ABI)
     return token_contract.functions.decimals().call()
 
-def execute_supply(user_address: str, asset_address: str, amount: float):
+def execute_supply(user_address: str, asset_symbol: str, asset_address: str, amount: float):
     user_checksum = Web3.to_checksum_address(user_address)
     asset_checksum = Web3.to_checksum_address(asset_address)
     decimals = get_asset_decimals(asset_checksum)
     amount_in_wei = int(amount * (10**decimals))
     asset_contract = w3.eth.contract(address=asset_checksum, abi=ERC20_ABI)
+
     executor_balance = asset_contract.functions.balanceOf(executor_account.address).call()
     if executor_balance < amount_in_wei:
         return {"status": "error", "message": f"Executor has insufficient balance to supply {amount}. Has: {executor_balance / (10**decimals)}"}
+
     allowance = asset_contract.functions.allowance(executor_account.address, pool_address).call()
     if allowance < amount_in_wei:
         approve_tx = asset_contract.functions.approve(pool_address, amount_in_wei).build_transaction({
@@ -66,15 +89,20 @@ def execute_supply(user_address: str, asset_address: str, amount: float):
         signed_approve = w3.eth.account.sign_transaction(approve_tx, EXECUTOR_PRIVATE_KEY)
         tx_hash_approve = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
         w3.eth.wait_for_transaction_receipt(tx_hash_approve)
+
     supply_tx = pool_contract.functions.supply(asset_checksum, amount_in_wei, user_checksum, 0).build_transaction({
         "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
     })
     signed_tx = w3.eth.account.sign_transaction(supply_tx, EXECUTOR_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
     w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    log_message = f"AAVE_SUPPLY: User {user_address} supplied {amount} {asset_symbol}. Tx: {tx_hash.hex()}"
+    log_to_hedera(log_message)
+
     return {"status": "success", "message": "Supply transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
-def execute_borrow(user_address: str, asset_address: str, amount: float, rate_mode: int):
+def execute_borrow(user_address: str, asset_symbol: str, asset_address: str, amount: float, rate_mode: int):
     user_checksum = Web3.to_checksum_address(user_address)
     asset_checksum = Web3.to_checksum_address(asset_address)
     decimals = get_asset_decimals(asset_checksum)
@@ -85,20 +113,27 @@ def execute_borrow(user_address: str, asset_address: str, amount: float, rate_mo
     signed_tx = w3.eth.account.sign_transaction(borrow_tx, EXECUTOR_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
     w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    log_message = f"AAVE_BORROW: User {user_address} borrowed {amount} {asset_symbol}. Tx: {tx_hash.hex()}"
+    log_to_hedera(log_message)
+
     return {"status": "success", "message": "Borrow transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
-def execute_repay(user_address: str, asset_address: str):
+def execute_repay(user_address: str, asset_symbol: str, asset_address: str):
     user_checksum = Web3.to_checksum_address(user_address)
     asset_checksum = Web3.to_checksum_address(asset_address)
     data = data_provider.functions.getUserReserveData(asset_checksum, user_checksum).call()
     stable_debt, variable_debt = data[1], data[2]
     rate_mode = 1 if stable_debt > 0 else 2 if variable_debt > 0 else 0
     if rate_mode == 0: return {"status": "success", "message": "No active debt found to repay."}
+    
     user_total_debt = stable_debt + variable_debt
     debt_token_contract = w3.eth.contract(address=asset_checksum, abi=ERC20_ABI)
     executor_balance = debt_token_contract.functions.balanceOf(executor_account.address).call()
     if executor_balance == 0: return {"status": "error", "message": "Executor wallet has zero balance for the specified asset."}
+    
     amount_to_repay = min(user_total_debt, executor_balance)
+    
     allowance = debt_token_contract.functions.allowance(executor_account.address, pool_address).call()
     if allowance < amount_to_repay:
         approve_tx = debt_token_contract.functions.approve(pool_address, 2**256 - 1).build_transaction({
@@ -107,28 +142,29 @@ def execute_repay(user_address: str, asset_address: str):
         signed_approve = w3.eth.account.sign_transaction(approve_tx, EXECUTOR_PRIVATE_KEY)
         tx_hash_approve = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
         w3.eth.wait_for_transaction_receipt(tx_hash_approve)
+    
     repay_tx = pool_contract.functions.repay(asset_checksum, amount_to_repay, rate_mode, user_checksum).build_transaction({
         "from": executor_account.address, "chainId": 84532, "nonce": w3.eth.get_transaction_count(executor_account.address)
     })
     signed_tx = w3.eth.account.sign_transaction(repay_tx, EXECUTOR_PRIVATE_KEY)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
     w3.eth.wait_for_transaction_receipt(tx_hash)
-    return {"status": "success", "message": "Repay transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
+    log_message = f"AAVE_REPAY: Executor repaid {asset_symbol} debt for user {user_address}. Tx: {tx_hash.hex()}"
+    log_to_hedera(log_message)
+    
+    return {"status": "success", "message": "Repay transaction sent successfully.", "tx_hash": tx_hash.hex()}
 
 # --- 3. API DEFINITION ---
 app = FastAPI(
     title="Aave Concierge API (MCP Compliant)",
     description="A serverless API for executing Aave V3 actions, compliant with the Model Context Protocol.",
-    version="6.0.0",
+    version="7.0.0",
 )
 
-# --- NEW: MCP Discovery Endpoint ---
+# --- MCP Discovery Endpoint ---
 @app.get("/mcp")
 def mcp_discovery():
-    """
-    The official discovery endpoint that describes this API's capabilities to an AI.
-    """
     return {
         "service": {
             "name": "aave_concierge",
@@ -183,7 +219,6 @@ def mcp_discovery():
         ]
     }
 
-
 # --- Pydantic Models ---
 class HealthResponse(BaseModel):
     user_address: str
@@ -221,7 +256,7 @@ async def supply(req: TxRequestSymbol):
     if not asset_address:
         raise HTTPException(status_code=400, detail=f"Asset symbol '{req.asset_symbol}' not found.")
     try:
-        result = execute_supply(req.user_address, asset_address, req.amount)
+        result = execute_supply(req.user_address, req.asset_symbol, asset_address, req.amount)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
@@ -232,7 +267,7 @@ async def borrow(req: BorrowRequestSymbol):
     if not asset_address:
         raise HTTPException(status_code=400, detail=f"Asset symbol '{req.asset_symbol}' not found.")
     try:
-        result = execute_borrow(req.user_address, asset_address, req.amount, req.interest_rate_mode)
+        result = execute_borrow(req.user_address, req.asset_symbol, asset_address, req.amount, req.interest_rate_mode)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
@@ -243,8 +278,7 @@ async def repay(req: RepayRequestSymbol):
     if not asset_address:
         raise HTTPException(status_code=400, detail=f"Asset symbol '{req.asset_symbol}' not found.")
     try:
-        result = execute_repay(req.user_address, asset_address)
+        result = execute_repay(req.user_address, req.asset_symbol, asset_address)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e}")
-

@@ -1,14 +1,23 @@
 {
   "builds": [
     {
-      "src": "main.py",
-      "use": "@vercel/python"
+      "src": "aave-concierge-api/main.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb" }
+    },
+    {
+      "src": "hedera-logger-api/package.json",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/hedera/(.*)",
+      "dest": "/hedera-logger-api/api/log.ts"
+    },
+    {
       "src": "/(.*)",
-      "dest": "main.py"
+      "dest": "/aave-concierge-api/main.py"
     }
   ]
 }

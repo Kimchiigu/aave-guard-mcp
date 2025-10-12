@@ -4,4 +4,6 @@ __pycache__
 venv
 start_claude.bat
 *.py
+old-python-files
+create_topic.js
 !main.py
