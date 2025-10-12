@@ -13,11 +13,8 @@
 
 **Aave Concierge API** is an MCP-compliant API that lets AI agents like Aya's manage Aave loans, supplies, and borrows using simple natural language commands.
 
-### One-Sentence Elevator Pitch
-An MCP-compliant API that lets AI agents like Aya's manage Aave loans, supplies, and borrows using simple natural language commands
-
-### Detailed Project Description
-**LoanGuardian** (solo) is a comprehensive DeFi platform that combines Aave protocol integration with decentralized consensus logging. The project consists of two complementary APIs:
+### Project Description
+**LoanGuardian** is a comprehensive DeFi platform that combines Aave protocol integration with decentralized consensus logging. The project consists of two complementary APIs:
 
 **Aave Concierge API:** DeFi protocols like Aave are powerful but their complexity creates a barrier for AI agents. The Aave Concierge API solves this by acting as a simple, intelligent bridge.
 
@@ -30,12 +27,17 @@ For this hackathon, both APIs are deployed on Vercel - the Aave API operates on 
 ## 📋 Features
 
 ### Aave Concierge API
-The API provides a suite of "concierge" services for Aave:
+A comprehensive MCP-compliant API for Aave V3 protocol interaction with built-in safety features:
 
-- **GET /health/{user_address}**: Instantly checks a user's health factor
-- **POST /supply**: Supplies assets to Aave on behalf of a user
-- **POST /borrow**: Borrows assets from Aave for a user
-- **POST /repay**: Repays a user's debt from the executor wallet
+- **GET /health/{network}/{user}**: Real-time health factor monitoring with borrowing safety assessment
+- **POST /supply**: Secure asset supplying with automatic transaction logging to Hedera HCS
+- **POST /borrow**: Intelligent borrowing with automatic health factor checks and liquidation protection
+- **POST /repay**: Safe debt repayment with executor wallet management
+- **GET /balance/{network}/{user}**: Multi-token balance checking across supported networks
+- **POST /simulate**: Risk-free transaction simulation to preview health factor impacts
+- **Built-in Safety Features**: Automatic health factor monitoring, gas optimization, and transaction failure handling
+- **Multi-Network Support**: Currently supports Base Sepolia and ETH Sepolia testnets
+- **AI Agent Ready**: Full MCP compliance with comprehensive manifest for AI integration
 
 ### Hedera Consensus Logger API
 A decentralized logging service that provides immutable audit trails using Hedera Hashgraph Consensus Service (HCS):
@@ -94,6 +96,8 @@ Create a file named `.env` in the `aave-concierge-api` directory:
 ALCHEMY_API_KEY="your_alchemy_api_key_for_base_sepolia"
 EXECUTOR_PRIVATE_KEY="your_secure_executor_wallet_private_key"
 AAVE_POOL_ADDRESS_PROVIDER_V3_BASE_SEPOLIA="0xE4C23309117Aa30342BFaae6c95c6478e0A4Ad00"
+HEDERA_LOGGER_URL="https://your-hedera-api-url.vercel.app/api/log"
+NETWORK="base-sepolia"
 ```
 
 #### 2.4 Run the Aave API Locally
@@ -183,7 +187,22 @@ Both APIs are designed to be deployed as serverless functions on Vercel.
 
 ## 🤖 AI Agent Integration
 
-To use this API with an AI agent, you will need the `tool_spec.json` file. This file describes the API's capabilities in a machine-readable format that the AI can understand.
+### MCP (Model Context Protocol) Integration
+The project includes a comprehensive MCP manifest file (`mcp-manifest.json`) that describes the API's capabilities in a machine-readable format that AI agents can understand.
+
+**Built-in Features:**
+- **Automatic Hedera Logging**: All Aave transactions automatically log to Hedera HCS via the `schedule_log()` function
+- **Multi-Network Support**: Built-in support for Base Sepolia and ETH Sepolia testnets
+- **Health Factor Safety**: Automatic health factor checks before borrowing operations
+- **Simulation Mode**: Dry-run simulations for safe testing without real transactions
+
+**MCP Methods Available:**
+- `supply`: Supply tokens to Aave
+- `borrow`: Borrow tokens with safety checks
+- `repay`: Repay borrowed tokens
+- `health`: Check user health factor
+- `balance`: Get token balances
+- `simulate`: Simulate transactions without execution
 
 ## 📖 Usage Examples
 
@@ -191,28 +210,40 @@ To use this API with an AI agent, you will need the `tool_spec.json` file. This 
 
 #### Check User Health
 ```bash
-curl -X GET "https://aave-guard-mcp.vercel.app/health/0x123...abc"
+curl -X GET "https://aave-guard-mcp.vercel.app/health/base-sepolia/0x123...abc"
 ```
 
 #### Supply Assets
 ```bash
 curl -X POST "https://aave-guard-mcp.vercel.app/supply" \
   -H "Content-Type: application/json" \
-  -d '{"user_address": "0x123...abc", "asset": "USDC", "amount": "1000"}'
+  -d '{"user_address": "0x123...abc", "token": "USDC", "amount": 1000, "network": "base-sepolia"}'
 ```
 
 #### Borrow Assets
 ```bash
 curl -X POST "https://aave-guard-mcp.vercel.app/borrow" \
   -H "Content-Type: application/json" \
-  -d '{"user_address": "0x123...abc", "asset": "USDC", "amount": "500"}'
+  -d '{"user_address": "0x123...abc", "token": "USDC", "amount": 500, "network": "base-sepolia"}'
 ```
 
 #### Repay Debt
 ```bash
 curl -X POST "https://aave-guard-mcp.vercel.app/repay" \
   -H "Content-Type: application/json" \
-  -d '{"user_address": "0x123...abc", "asset": "USDC", "amount": "250"}'
+  -d '{"user_address": "0x123...abc", "token": "USDC", "amount": 250, "network": "base-sepolia"}'
+```
+
+#### Get Token Balances
+```bash
+curl -X GET "https://aave-guard-mcp.vercel.app/balance/base-sepolia/0x123...abc"
+```
+
+#### Simulate Transaction
+```bash
+curl -X POST "https://aave-guard-mcp.vercel.app/simulate" \
+  -H "Content-Type: application/json" \
+  -d '{"user_address": "0x123...abc", "token": "USDC", "amount": 1000, "network": "base-sepolia"}'
 ```
 
 ### Hedera Logger API Examples
@@ -231,45 +262,74 @@ curl -X POST "https://your-hedera-api-url.vercel.app/api/log" \
   -d '{"log_message": "TX_HASH: 0xabc...123 | ACTION: borrow | ASSET: USDC | AMOUNT: 500 | USER: 0x123...abc"}'
 ```
 
-### Integration Example
-The Aave API can be configured to automatically log transactions to the Hedera Logger API:
+### Built-in Integration Example
+The Aave API already includes built-in Hedera logging integration. Here's how it works automatically:
 
+**Automatic Logging in Aave API:**
 ```python
-# Example integration in Aave API
-import requests
+# From main.py - this happens automatically for every transaction
+async def log_to_hedera(msg: str):
+    async with aiohttp.ClientSession() as session:
+        try:
+            await session.post(HEDERA_LOGGER_URL, json={"log_message": msg}, timeout=5)
+        except Exception as e:
+            print("[WARN] Hedera log failed:", e)
 
-def log_transaction_to_hedera(action, user_address, asset, amount, tx_hash):
-    log_message = f"TX_HASH: {tx_hash} | ACTION: {action} | ASSET: {asset} | AMOUNT: {amount} | USER: {user_address}"
-
-    response = requests.post(
-        "https://your-hedera-api-url.vercel.app/api/log",
-        json={"log_message": log_message}
-    )
-
-    return response.json()
+def schedule_log(msg: str):
+    try:
+        asyncio.create_task(log_to_hedera(msg))
+    except RuntimeError:
+        asyncio.run(log_to_hedera(msg))
 ```
 
-## ⚠️ Known Issues
+**Environment Variable Configuration:**
+```env
+# In Aave API .env file
+HEDERA_LOGGER_URL="https://your-hedera-api-url.vercel.app/api/log"
+```
 
-### Current Known Issues
+**Sample Automatic Log Messages:**
+- `SUPPLY 1000 USDC on base-sepolia by 0x123...abc, status=1`
+- `BORROW 500 USDC on base-sepolia, HF_before=2.5, status=1`
+- `REPAY 250 USDC on base-sepolia by 0x123...abc, status=1`
 
-#### Aave Concierge API Issues
-- **Transaction Rejections**: The methods for repay, borrow, and supply are currently being rejected by the EVM, but the API endpoints work correctly. This is likely related to gas configuration, smart contract interactions, or testnet-specific issues that need to be resolved.
+## ⚠️ Current Limitations & Future Plans
 
-#### Hedera Logger API Issues
-- **Topic Configuration**: Users need to manually create a Hedera topic using the `create_topic.js` script before the logger API can function properly.
-- **Testnet Limitations**: Currently operating on Hedera Testnet, which may have different performance characteristics compared to mainnet.
+### Current Testnet-Only Deployment
+**Current Status:**
+- **Aave API**: Operating on Base Sepolia and ETH Sepolia testnets only
+- **Hedera Logger**: Operating on Hedera Testnet only
+- **All transactions**: Use testnet tokens with no real value
 
-#### Integration Issues
-- **Cross-API Communication**: While both APIs are designed to work together, the automatic logging integration between Aave transactions and Hedera consensus logging needs to be implemented in the Aave API code.
+### Known Technical Issues
+- **Topic Configuration**: Hedera topic creation requires manual setup via `create_topic.js` script
+- **Cross-API Configuration**: `HEDERA_LOGGER_URL` environment variable needs proper configuration for production deployment
+
+### Future Development Roadmap
+**Phase 1 - Mainnet Integration:**
+- Deploy Aave API on Ethereum Mainnet and Polygon networks
+- Deploy Hedera Logger on Hedera Mainnet for production audit trails
+- Implement real asset support with proper risk management
+
+**Phase 2 - Network Expansion:**
+- Add support for additional EVM-compatible networks (Arbitrum, Optimism, Avalanche)
+- Implement multi-chain logging with Hedera consensus service
+- Enhanced AI agent capabilities with cross-chain operations
+
+**Phase 3 - Advanced Features:**
+- Liquidity pool analytics and optimization suggestions
+- Automated risk management and liquidation protection
+- Advanced simulation and forecasting tools
+- Integration with additional DeFi protocols beyond Aave
 
 ## 🔗 Links
 
 - **GitHub Repository:** https://github.com/Kimchiigu/aave-guard-mcp
 - **Aave Concierge API:** https://aave-guard-mcp.vercel.app/
-- **Hedera Logger API:** Deployed separately (URL depends on your Vercel setup)
-- **Aave API Documentation:** Available at `/docs` endpoint
+- **Aave API Documentation:** https://aave-guard-mcp.vercel.app/docs
+- **MCP Manifest:** https://github.com/Kimchiigu/aave-guard-mcp/blob/main/aave-concierge-api/mcp-manifest.json
 - **Hedera Hashgraph Docs:** https://docs.hedera.com/hedera/getting-started/mainnet
+- **Aave V3 Documentation:** https://docs.aave.com/developers/guides/liquidations
 
 ## 📄 License
 

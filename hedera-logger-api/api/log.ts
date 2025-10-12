@@ -6,9 +6,7 @@ import {
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import "dotenv/config";
 
-// Main serverless function handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST requests
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
@@ -29,7 +27,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!accountId || !privateKeyStr || !topicId) {
       console.error("HCS Error: Hedera environment variables not set.");
-      // We still return a success to not block the main API
       return res
         .status(200)
         .json({
@@ -57,12 +54,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log("HCS Log successful:", logResult);
 
-    // Return a success response to the caller (your Python API)
     return res.status(200).json(logResult);
   } catch (error: any) {
     console.error("HCS Error:", error);
-    // Important: Even if logging fails, we don't want to cause the main Aave transaction to fail.
-    // So we still return a success status code, but with an error message.
     return res.status(200).json({ status: "error", message: error.message });
   }
 }
