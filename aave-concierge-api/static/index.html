@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LoanGuardian - Aave Concierge API</title>
+    <link rel="stylesheet" href="static/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Hero Section with Video Background -->
+    <section class="hero d-flex align-items-center justify-content-center">
+      <div class="video-wrap">
+        <video autoplay playsinline loop muted id="video-bg">
+          <source
+            src="https://assets.codepen.io/319606/tactus-waves-hero-sm.mp4"
+            type="video/mp4"
+          />
+        </video>
+      </div>
+      <div class="content position-relative text-center">
+        <h1 class="hero-title blend">
+          LoanGuardian
+          <br />
+          <span class="highlight">MCP & API</span>
+        </h1>
+        <p class="hero-subtitle blend">
+          MCP-compliant API for AI agents to manage Aave loans, supplies, and
+          borrows with natural language commands
+        </p>
+        <div class="hero-buttons">
+          <a
+            href="https://github.com/Kimchiigu/aave-guard-mcp"
+            class="btn btn-primary"
+          >
+            <i class="fas fa-book"></i> View GitHub Repo
+          </a>
+          <a
+            href="https://aave-guard-mcp.vercel.app/docs"
+            class="btn btn-secondary"
+          >
+            <i class="fas fa-rocket"></i> Try LoanGuardian API
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+      <div class="container">
+        <h2 class="section-title">Key Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-heartbeat"></i>
+            </div>
+            <h3>Health Monitoring</h3>
+            <p>
+              Real-time health factor monitoring with borrowing safety
+              assessment and liquidation protection
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-coins"></i>
+            </div>
+            <h3>Supply & Borrow</h3>
+            <p>
+              Secure asset supplying and intelligent borrowing with automatic
+              safety checks
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-sync-alt"></i>
+            </div>
+            <h3>Repay Operations</h3>
+            <p>
+              Safe debt repayment with executor wallet management and
+              transaction optimization
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-network-wired"></i>
+            </div>
+            <h3>Multi-Network</h3>
+            <p>
+              Support for Base Sepolia and ETH Sepolia testnets with easy
+              network expansion
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-flask"></i>
+            </div>
+            <h3>Simulation Mode</h3>
+            <p>
+              Risk-free transaction simulation to preview health factor impacts
+              before execution
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-lock"></i>
+            </div>
+            <h3>Hedera Logging</h3>
+            <p>
+              Immutable audit trails using Hedera Hashgraph Consensus Service
+              for all transactions
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Section -->
+    <section class="api-section" id="api">
+      <div class="container">
+        <h2 class="section-title">API Endpoints</h2>
+        <div class="api-grid">
+          <div class="api-card">
+            <div class="api-method GET">GET</div>
+            <div class="api-content">
+              <h3>/health/{network}/{user}</h3>
+              <p>
+                Real-time health factor monitoring with borrowing safety
+                assessment
+              </p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method POST">POST</div>
+            <div class="api-content">
+              <h3>/supply</h3>
+              <p>
+                Secure asset supplying with automatic transaction logging to
+                Hedera HCS
+              </p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method POST">POST</div>
+            <div class="api-content">
+              <h3>/borrow</h3>
+              <p>
+                Intelligent borrowing with automatic health factor checks and
+                liquidation protection
+              </p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method POST">POST</div>
+            <div class="api-content">
+              <h3>/repay</h3>
+              <p>Safe debt repayment with executor wallet management</p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method GET">GET</div>
+            <div class="api-content">
+              <h3>/balance/{network}/{user}</h3>
+              <p>Multi-token balance checking across supported networks</p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method POST">POST</div>
+            <div class="api-content">
+              <h3>/simulate</h3>
+              <p>
+                Risk-free transaction simulation to preview health factor
+                impacts
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Integration Section -->
+    <section class="integration">
+      <div class="container">
+        <h2 class="section-title">AI Agent Integration</h2>
+        <div class="integration-content">
+          <div class="integration-text">
+            <h3>MCP (Model Context Protocol) Ready</h3>
+            <p>
+              Full MCP compliance with comprehensive manifest for AI
+              integration. Built-in features include:
+            </p>
+            <ul>
+              <li>Automatic Hedera Logging</li>
+              <li>Multi-Network Support</li>
+              <li>Health Factor Safety</li>
+              <li>Simulation Mode</li>
+            </ul>
+            <a
+              href="https://github.com/Kimchiigu/aave-guard-mcp/blob/main/aave-concierge-api/mcp-manifest.json"
+              class="btn btn-primary"
+            >
+              <i class="fas fa-file-code"></i> View MCP Manifest
+            </a>
+          </div>
+          <div class="integration-code">
+            <pre><code>// Available MCP Methods
+- supply: Supply tokens to Aave
+- borrow: Borrow tokens with safety checks
+- repay: Repay borrowed tokens
+- health: Check user health factor
+- balance: Get token balances
+- simulate: Simulate transactions</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="team" id="team">
+      <div class="container">
+        <h2 class="section-title">Team</h2>
+        <div class="team-content">
+          <div class="team-info">
+            <h3>Team: LoanGuardian</h3>
+            <p>
+              Building the future of AI-powered DeFi operations with security
+              and transparency at our core.
+            </p>
+          </div>
+          <div class="team-lead">
+            <div class="member-card">
+              <div class="member-avatar">
+                <img
+                  src="static/christo.jpg"
+                  alt="Christopher Hardy Gunawan - Team Lead"
+                  class="team-member-image"
+                />
+              </div>
+              <h4>Christopher Hardy Gunawan</h4>
+              <p class="member-role">Team Lead</p>
+              <div class="member-links">
+                <a
+                  href="mailto:christopher.hygunawan@gmail.com"
+                  class="social-link"
+                >
+                  <i class="fas fa-envelope"></i>
+                </a>
+                <a href="https://t.me/kimchiigu" class="social-link">
+                  <i class="fab fa-telegram"></i>
+                </a>
+                <a href="https://twitter.com/Kimchiigu73" class="social-link">
+                  <i class="fab fa-twitter"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-logo">
+              <i class="fas fa-shield-alt"></i>
+              <span>LoanGuardian</span>
+            </div>
+            <p>
+              MCP-compliant Aave Concierge API with Hedera Consensus Service
+              integration
+            </p>
+          </div>
+          <div class="footer-section">
+            <h4>Quick Links</h4>
+            <ul>
+              <li>
+                <a href="https://github.com/Kimchiigu/aave-guard-mcp">GitHub</a>
+              </li>
+              <li>
+                <a href="https://aave-guard-mcp.vercel.app/docs">API Docs</a>
+              </li>
+              <li>
+                <a href="https://aave-guard-mcp.vercel.app/">Live Demo</a>
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Technologies</h4>
+            <ul>
+              <li>FastAPI</li>
+              <li>Aave V3</li>
+              <li>Hedera HCS</li>
+              <li>Python 3.8+</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>
+            &copy; 2024 LoanGuardian. Built with ❤️ for the Aya Wallet Hackathon
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

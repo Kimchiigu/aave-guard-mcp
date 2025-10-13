@@ -1,5 +1,7 @@
 import os, asyncio, aiohttp, traceback
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, HTMLResponse
 from pydantic import BaseModel
 from web3 import Web3
 from dotenv import load_dotenv
@@ -166,6 +168,28 @@ def get_health_factor(pool, user):
 # ============================================================
 
 app = FastAPI(title="Aave Concierge API", version="6.0")
+
+# Mount static files for the landing page
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """
+    Serve the landing page HTML content.
+    Users are directed to visit /docs to try the API.
+    """
+    with open("static/index.html", "r", encoding="utf-8") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content)
+
+
+@app.get("/landing")
+async def landing():
+    """
+    Redirect to the landing page.
+    """
+    return RedirectResponse(url="/")
 
 
 class AaveRequest(BaseModel):
