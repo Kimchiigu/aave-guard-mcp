@@ -12,7 +12,7 @@
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
+      "src": "/aave-concierge-api/static/(.*)",
       "dest": "/aave-concierge-api/static/$1"
     },
     {
