@@ -12,8 +12,8 @@
   ],
   "routes": [
     {
-      "src": "/aave-concierge-api/static/(.*)",
-      "dest": "/aave-concierge-api/static/$1"
+      "src": "/static/(.*)",
+      "dest": "aave-concierge-api/static/$1"
     },
     {
       "src": "/hedera/(.*)",
