@@ -170,7 +170,8 @@ def get_health_factor(pool, user):
 app = FastAPI(title="Aave Concierge API", version="6.0")
 
 # Mount static files for the landing page
-app.mount("/static", StaticFiles(directory="static"), name="static")
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -179,7 +180,7 @@ async def root():
     Serve the landing page HTML content.
     Users are directed to visit /docs to try the API.
     """
-    with open("static/index.html", "r", encoding="utf-8") as f:
+    with open(os.path.join(static_dir, "index.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
 

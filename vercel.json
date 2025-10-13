@@ -12,6 +12,10 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/aave-concierge-api/static/$1"
+    },
+    {
       "src": "/hedera/(.*)",
       "dest": "/hedera-logger-api/api/log.ts"
     },
