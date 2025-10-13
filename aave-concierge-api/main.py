@@ -1,7 +1,9 @@
 import os, asyncio, aiohttp, traceback
+import json
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from web3 import Web3
 from dotenv import load_dotenv
@@ -167,11 +169,67 @@ def get_health_factor(pool, user):
 # FASTAPI APP
 # ============================================================
 
-app = FastAPI(title="Aave Concierge API", version="6.0")
+app = FastAPI(
+    title="Aave Concierge API - MCP Compliant",
+    description="MCP-compliant API for AI agents to manage Aave loans, supplies, and borrows with natural language commands. Built for Aya Wallet integration.",
+    version="6.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "LoanGuardian Team",
+        "email": "christopher.hygunawan@gmail.com",
+        "url": "https://github.com/Kimchiigu/aave-guard-mcp"
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    servers=[
+        {
+            "url": "https://aave-guard-mcp.vercel.app",
+            "description": "Production deployment"
+        },
+        {
+            "url": "http://localhost:8000",
+            "description": "Local development"
+        }
+    ],
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,
+        "displayRequestDuration": True,
+        "docExpansion": "none"
+    }
+)
 
-# Mount static files for the landing page
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.middleware("http")
+async def add_mcp_headers(request: Request, call_next):
+    """Add MCP-specific headers for AI agent discovery."""
+    response = await call_next(request)
+
+    # Add MCP discovery headers
+    response.headers["X-MCP-Version"] = "1.0"
+    response.headers["X-MCP-Endpoint"] = "/mcp-manifest"
+    response.headers["X-AI-Agent-Friendly"] = "true"
+    response.headers["X-API-Purpose"] = "Aave DeFi Operations"
+
+    # Add security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    return response
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -191,6 +249,22 @@ async def landing():
     Redirect to the landing page.
     """
     return RedirectResponse(url="/")
+
+
+@app.get("/mcp-manifest")
+async def mcp_manifest():
+    """
+    Serve the MCP manifest file for AI agent discovery.
+    """
+    manifest_path = os.path.join(static_dir, "mcp-manifest.json")
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest_content = f.read()
+        return JSONResponse(content=json.loads(manifest_content))
+    except FileNotFoundError:
+        raise HTTPException(404, "MCP manifest not found")
+    except json.JSONDecodeError:
+        raise HTTPException(500, "Invalid MCP manifest format")
 
 
 class AaveRequest(BaseModel):
