@@ -15,7 +15,7 @@ load_dotenv()
 ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY")
 EXECUTOR_PRIVATE_KEY = os.getenv("EXECUTOR_PRIVATE_KEY")
 AAVE_POOL_PROVIDER_BASE_SEPOLIA = os.getenv("AAVE_POOL_ADDRESS_PROVIDER_V3_BASE_SEPOLIA")
-HEDERA_LOGGER_URL = os.getenv("HEDERA_LOGGER_URL", "https://aave-guard-mcp.vercel.app/api/hedera")
+HEDERA_LOGGER_URL = os.getenv("HEDERA_LOGGER_URL", "http://localhost:3001/test-hedera")
 DEFAULT_NETWORK = os.getenv("NETWORK", "base-sepolia").lower()
 
 if not (ALCHEMY_API_KEY and EXECUTOR_PRIVATE_KEY):
@@ -521,13 +521,68 @@ async def simulate(req: AaveRequest):
     w3, _, cfg = init_web3(req.network)
     user = Web3.to_checksum_address(req.user_address)
     pool = get_pool_contract(w3, Web3.to_checksum_address(cfg["pool_provider"]))
-    hf_before = get_health_factor(pool, user)
-    action = "supply" if req.amount > 0 else "borrow"
-    hf_after = round(hf_before * (1.02 if action == "supply" else 0.97), 3)
+
+    # Get current account data
+    try:
+        account_data = pool.functions.getUserAccountData(user).call()
+        total_collateral_base = account_data[0]  # Total collateral in base currency
+        total_debt_base = account_data[1]        # Total debt in base currency
+        available_borrows_base = account_data[2]  # Available borrowing capacity
+        current_liquidation_threshold = account_data[3]  # Liquidation threshold
+        hf_before = round(account_data[5] / 1e18 if account_data[5] else 0, 3)
+    except Exception as e:
+        return {"error": f"Failed to get account data: {str(e)}"}
+
+    # Determine action and calculate new health factor
+    if req.amount > 0:
+        action = "supply"
+        # For supply: add to collateral (simplified - assumes 1:1 value for demo)
+        # In reality, should use token price and collateral factor
+        additional_collateral = int(req.amount * 1e18)  # Convert to wei (base currency)
+        new_total_collateral = total_collateral_base + additional_collateral
+        new_total_debt = total_debt_base
+
+        if new_total_debt == 0:
+            hf_after = 100.0  # Very high health factor when no debt
+        else:
+            hf_after = (new_total_collateral * current_liquidation_threshold) / new_total_debt / 1e18
+    else:
+        action = "borrow"
+        borrow_amount = abs(req.amount)
+
+        # Check if user has enough borrowing capacity
+        borrow_amount_base = int(borrow_amount * 1e18)  # Convert to wei (base currency)
+
+        if borrow_amount_base > available_borrows_base:
+            return {
+                "action": action,
+                "token": req.token.upper(),
+                "amount": req.amount,
+                "network": req.network,
+                "health_factor_before": hf_before,
+                "health_factor_after_est": 0,
+                "safety": "insufficient capacity ❌",
+                "available_borrows": round(available_borrows_base / 1e18, 6),
+                "requested_amount": borrow_amount,
+                "note": f"Insufficient borrowing capacity. Available: {round(available_borrows_base / 1e18, 6)}, Requested: {borrow_amount}"
+            }
+
+        # For borrow: add to debt
+        new_total_collateral = total_collateral_base
+        new_total_debt = total_debt_base + borrow_amount_base
+
+        if new_total_debt == 0:
+            hf_after = 100.0
+        else:
+            hf_after = (new_total_collateral * current_liquidation_threshold) / new_total_debt / 1e18
+
+    hf_after = round(hf_after, 3)
     safety = "safe ✅" if hf_after >= 1.1 else "risky ⚠️"
-    msg = f"Simulated {action} {req.amount} {req.token} on {req.network}: HF {hf_before}→{hf_after} ({safety})"
+
+    msg = f"Simulated {action} {abs(req.amount)} {req.token} on {req.network}: HF {hf_before}→{hf_after} ({safety})"
     schedule_log(msg)
-    return {
+
+    result = {
         "action": action,
         "token": req.token.upper(),
         "amount": req.amount,
@@ -537,3 +592,9 @@ async def simulate(req: AaveRequest):
         "safety": safety,
         "note": "Dry-run only; no blockchain transaction executed."
     }
+
+    if action == "borrow":
+        result["available_borrows"] = round(available_borrows_base / 1e18, 6)
+        result["current_capacity_check"] = "✅ Sufficient capacity" if borrow_amount_base <= available_borrows_base else "❌ Insufficient capacity"
+
+    return result

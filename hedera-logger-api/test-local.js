@@ -1,5 +1,5 @@
 const express = require('express');
-const handler = require('./api/log.ts');
+const handler = require('./api/log.js');
 require('dotenv').config();
 
 const app = express();

@@ -6,8 +6,22 @@
       "config": { "maxLambdaSize": "15mb" }
     },
     {
-      "src": "api/hedera.js",
+      "src": "hedera-logger-api/package.json",
       "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "aave-concierge-api/static/$1"
+    },
+    {
+      "src": "/api/hedera",
+      "dest": "hedera-logger-api/api/log.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/aave-concierge-api/main.py"
     }
   ]
 }
