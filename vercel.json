@@ -17,7 +17,7 @@
     },
     {
       "src": "/api/hedera",
-      "dest": "hedera-logger-api/api/log.ts"
+      "dest": "hedera-logger-api/api/log.js"
     },
     {
       "src": "/(.*)",
