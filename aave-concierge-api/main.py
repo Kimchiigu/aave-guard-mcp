@@ -15,7 +15,7 @@ load_dotenv()
 ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY")
 EXECUTOR_PRIVATE_KEY = os.getenv("EXECUTOR_PRIVATE_KEY")
 AAVE_POOL_PROVIDER_BASE_SEPOLIA = os.getenv("AAVE_POOL_ADDRESS_PROVIDER_V3_BASE_SEPOLIA")
-HEDERA_LOGGER_URL = os.getenv("HEDERA_LOGGER_URL", "https://aave-guard-mcp.vercel.app/hedera")
+HEDERA_LOGGER_URL = os.getenv("HEDERA_LOGGER_URL", "https://aave-guard-mcp.vercel.app/api/hedera")
 DEFAULT_NETWORK = os.getenv("NETWORK", "base-sepolia").lower()
 
 if not (ALCHEMY_API_KEY and EXECUTOR_PRIVATE_KEY):
@@ -350,7 +350,7 @@ async def mcp_manifest():
         },
         "auditing": {
             "hedera_logger": {
-                "endpoint": "https://aave-guard-mcp.vercel.app/hedera",
+                "endpoint": "https://aave-guard-mcp.vercel.app/api/hedera",
                 "description": "Asynchronous audit log to Hedera Consensus Service (HCS) for all major actions."
             }
         }
