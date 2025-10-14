@@ -7,3 +7,4 @@ start_claude.bat
 old-python-files
 create_topic.js
 !main.py
+.claude
