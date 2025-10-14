@@ -9,15 +9,5 @@
       "src": "api/hedera.js",
       "use": "@vercel/node"
     }
-  ],
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "aave-concierge-api/static/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/aave-concierge-api/main.py"
-    }
   ]
 }
