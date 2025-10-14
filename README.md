@@ -55,7 +55,7 @@ A decentralized logging service that provides immutable audit trails using Heder
 - **Name:** Christopher Hardy Gunawan
 - **Email:** christopher.hygunawan@gmail.com
 - **Telegram:** [@kimchiigu](https://t.me/kimchiigu)
-- **X/Twitter:** [@Kimchiigu73](https://twitter.com/Kimchiigu73)
+- **X/Twitter:** [@Kimchii73](https://twitter.com/Kimchii73)
 
 **Team Members:** 1
 
