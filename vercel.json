@@ -3,25 +3,35 @@
     {
       "src": "aave-concierge-api/main.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb" }
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9"
+      }
     },
     {
-      "src": "hedera-logger-api/package.json",
-      "use": "@vercel/node"
+      "src": "hedera-logger-api/dist/api/log.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "nodejs18.x"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "aave-concierge-api/static/$1"
+      "src": "/api/hedera",
+      "dest": "/hedera-logger-api/dist/api/log.js"
     },
     {
-      "src": "/api/hedera",
-      "dest": "hedera-logger-api/api/log.ts"
+      "src": "/api/(.*)",
+      "dest": "/aave-concierge-api/main.py"
     },
     {
       "src": "/(.*)",
       "dest": "/aave-concierge-api/main.py"
     }
-  ]
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.9"
+  }
 }

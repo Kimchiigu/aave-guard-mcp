@@ -11,7 +11,7 @@ load_dotenv()
 
 ALCHEMY_API_KEY = os.getenv("ALCHEMY_API_KEY")
 EXECUTOR_PRIVATE_KEY = os.getenv("EXECUTOR_PRIVATE_KEY")
-HEDERA_LOGGER_URL = os.getenv("HEDERA_LOGGER_URL", "http://localhost:3001/test-hedera")
+HEDERA_LOGGER_URL = os.getenv("HEDERA_LOGGER_URL", "https://aave-guard-mcp.vercel.app/api/hedera")
 DEFAULT_NETWORK = os.getenv("NETWORK", "base-sepolia").lower()
 
 if not (ALCHEMY_API_KEY and EXECUTOR_PRIVATE_KEY):
