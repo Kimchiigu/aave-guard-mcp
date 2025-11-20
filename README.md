@@ -47,6 +47,14 @@ A decentralized logging service that provides immutable audit trails using Heder
 - Serverless architecture with Node.js/TypeScript
 - Graceful failure handling that doesn't block main API operations
 
+### Aave Address Updater
+A utility script for maintaining up-to-date Aave V3 pool addresses across all supported networks:
+
+- **Multi-Network Support**: Exports addresses for Ethereum, Arbitrum, Avalanche, Base, BNB, Celo, Gnosis, Linea, Metis, Optimism, Polygon, Scroll, and more
+- **Categorized Exports**: Separates mainnet and testnet addresses for organized usage
+- **Automated Updates**: Pulls latest addresses from official Aave address book package
+- **JSON Format**: Easy-to-consume JSON files for API integration
+
 ## 👥 Team Information
 
 **Team Name:** LoanGuardian
@@ -63,7 +71,8 @@ A decentralized logging service that provides immutable audit trails using Heder
 
 ### Prerequisites
 - Python 3.8+ (for Aave API)
-- Node.js 16+ (for Hedera Logger API)
+- Node.js 16+ (for Hedera Logger API and Aave Address Updater)
+- TypeScript (for Aave Address Updater)
 - Virtual environment (recommended)
 
 ### Step 1: Clone the Repository
@@ -105,21 +114,42 @@ NETWORK="base-sepolia"
 uvicorn main:app --reload
 ```
 
-### Step 3: Hedera Logger API Setup
+### Step 3: Aave Address Updater Setup
+
+The aave-updater utility helps you maintain up-to-date Aave V3 pool addresses across all supported networks.
 
 #### 3.1 Install Dependencies
+```bash
+cd aave-updater
+npm install
+```
+
+#### 3.2 Update Aave Addresses
+Run the updater to generate the latest Aave pool address JSON files:
+```bash
+npx ts-node update-addresses.ts
+```
+
+This will create three files in the `aave-updater` directory:
+- `aave_addresses_mainnet.json` - Mainnet pool addresses
+- `aave_addresses_testnet.json` - Testnet pool addresses
+- `aave_addresses_all.json` - Combined mainnet and testnet addresses
+
+### Step 4: Hedera Logger API Setup
+
+#### 4.1 Install Dependencies
 ```bash
 cd hedera-logger-api
 npm install
 ```
 
-#### 3.2 Create Hedera Topic
+#### 4.2 Create Hedera Topic
 ```bash
 node create_topic.js
 ```
 This will create a new HCS topic and provide you with a Topic ID.
 
-#### 3.3 Environment Variables for Hedera API
+#### 4.3 Environment Variables for Hedera API
 Create a file named `.env` in the `hedera-logger-api` directory:
 
 ```env

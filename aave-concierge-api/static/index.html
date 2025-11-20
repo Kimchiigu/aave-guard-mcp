@@ -992,10 +992,7 @@
           >
             <i class="fas fa-book"></i> View GitHub Repo
           </a>
-          <a
-            href="https://aave-guard-mcp.vercel.app/docs"
-            class="btn btn-secondary"
-          >
+          <a href="/docs" class="btn btn-secondary">
             <i class="fas fa-rocket"></i> Try LoanGuardian API
           </a>
         </div>
@@ -1130,6 +1127,34 @@
               </p>
             </div>
           </div>
+          <div class="api-card">
+            <div class="api-method POST">POST</div>
+            <div class="api-content">
+              <h3>/build/transaction</h3>
+              <p>Build transaction data for user to sign with gas estimates</p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method POST">POST</div>
+            <div class="api-content">
+              <h3>/execute/transaction</h3>
+              <p>Execute signed transactions from users</p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method GET">GET</div>
+            <div class="api-content">
+              <h3>/gas/estimate/{network}/{token}/{amount}</h3>
+              <p>Estimate gas costs for transactions with approval checks</p>
+            </div>
+          </div>
+          <div class="api-card">
+            <div class="api-method GET">GET</div>
+            <div class="api-content">
+              <h3>/api/mcp-manifest</h3>
+              <p>MCP manifest for AI agent discovery and integration</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1151,10 +1176,7 @@
               <li>Health Factor Safety</li>
               <li>Simulation Mode</li>
             </ul>
-            <a
-              href="https://github.com/Kimchiigu/aave-guard-mcp/blob/main/aave-concierge-api/mcp-manifest.json"
-              class="btn btn-primary"
-            >
+            <a href="/mcp-manifest" class="btn btn-primary">
               <i class="fas fa-file-code"></i> View MCP Manifest
             </a>
           </div>
@@ -1165,7 +1187,10 @@
 - repay: Repay borrowed tokens
 - health: Check user health factor
 - balance: Get token balances
-- simulate: Simulate transactions</code></pre>
+- simulate: Simulate transactions
+- build_transaction: Build transactions for signing
+- execute_transaction: Execute signed transactions
+- gas_estimate: Estimate gas costs</code></pre>
           </div>
         </div>
       </div>
@@ -1204,7 +1229,7 @@
                 <a href="https://t.me/kimchiigu" class="social-link">
                   <i class="fab fa-telegram"></i>
                 </a>
-                <a href="https://twitter.com/Kimchiigu73" class="social-link">
+                <a href="https://twitter.com/Kimchii73" class="social-link">
                   <i class="fab fa-twitter"></i>
                 </a>
               </div>
@@ -1235,16 +1260,16 @@
                 <a href="https://github.com/Kimchiigu/aave-guard-mcp">GitHub</a>
               </li>
               <li>
-                <a href="https://aave-guard-mcp.vercel.app/docs">API Docs</a>
+                <a href="/docs">API Docs</a>
               </li>
-              <li>
-                <a href="https://aave-guard-mcp.vercel.app/">Live Demo</a>
-              </li>
+              <!-- <li>
+                <a href="/">Live Demo</a>
+              </li> -->
             </ul>
           </div>
           <div class="footer-section">
             <h4>Technologies</h4>
-            <ul style="color: var(--text-secondary);">
+            <ul style="color: var(--text-secondary)">
               <li>FastAPI</li>
               <li>Aave V3</li>
               <li>Hedera HCS</li>
@@ -1260,6 +1285,40 @@
       </div>
     </footer>
 
+    <script>
+      // Dynamic URL detection
+      const currentDomain =
+        window.location.protocol + "//" + window.location.host;
+
+      // Update all internal links when DOM is loaded
+      document.addEventListener("DOMContentLoaded", function () {
+        // Update hero button
+        const heroButton = document.querySelector('a[href*="api/docs"]');
+        if (heroButton) {
+          heroButton.href = currentDomain + "/api/docs";
+        }
+
+        // Update footer API docs link
+        const footerApiLink = document.querySelector('a[href*="api/docs"]');
+        if (footerApiLink) {
+          footerApiLink.href = currentDomain + "/api/docs";
+        }
+
+        // Update MCP manifest link
+        const manifestLink = document.querySelector('a[href*="mcp-manifest"]');
+        if (manifestLink) {
+          manifestLink.href = currentDomain + "/api/mcp-manifest";
+        }
+
+        // Update live demo link (should point to root)
+        const demoLink = document.querySelector(
+          'a[href*="aave-guard-mcp.vercel.app/"]'
+        );
+        if (demoLink && !demoLink.href.includes("api/docs")) {
+          demoLink.href = currentDomain + "/";
+        }
+      });
+    </script>
     <script src="/static/script.js"></script>
   </body>
 </html>

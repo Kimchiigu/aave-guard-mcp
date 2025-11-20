@@ -1,0 +1,404 @@
+AAVE GUARD MCP - AVAILABLE NETWORKS
+==================================================
+Generated: 2025-11-19 11:19:33
+Total Networks: 27
+
+MAINNETS
+--------------------
+eth-mainnet               | Chain ID: 1          | Assets: 55 
+eth-etherfi               | Chain ID: 1          | Assets: 4  
+eth-horizon               | Chain ID: 1          | Assets: 8  
+eth-lido                  | Chain ID: 1          | Assets: 9  
+optimism-mainnet          | Chain ID: 10         | Assets: 14 
+bnb-mainnet               | Chain ID: 56         | Assets: 8  
+gnosis-mainnet            | Chain ID: 100        | Assets: 9  
+polygon                   | Chain ID: 137        | Assets: 21 
+sonic-mainnet             | Chain ID: 146        | Assets: 4  
+zksync-mainnet            | Chain ID: 324        | Assets: 8  
+metis-mainnet             | Chain ID: 1088       | Assets: 5  
+soneium-mainnet           | Chain ID: 1868       | Assets: 3  
+base-mainnet              | Chain ID: 8453       | Assets: 14 
+plasma-mainnet            | Chain ID: 9745       | Assets: 11 
+arbitrum-mainnet          | Chain ID: 42161      | Assets: 20 
+celo-mainnet              | Chain ID: 42220      | Assets: 6  
+avalanche-mainnet         | Chain ID: 43114      | Assets: 17 
+inkwhitelabel-mainnet     | Chain ID: 57073      | Assets: 5  
+linea-mainnet             | Chain ID: 59144      | Assets: 8  
+scroll-mainnet            | Chain ID: 534352     | Assets: 5  
+
+TOTAL MAINNETS: 20
+
+TESTNETS
+--------------------
+avalanche-fuji            | Chain ID: 43113      | Assets: 4  
+base-sepolia              | Chain ID: 84532      | Assets: 6  
+base-sepolialido          | Chain ID: 84532      | Assets: 5  
+arbitrum-sepolia          | Chain ID: 421614     | Assets: 2  
+scroll-sepolia            | Chain ID: 534351     | Assets: 8  
+eth-sepolia               | Chain ID: 11155111   | Assets: 9  
+optimism-sepolia          | Chain ID: 11155420   | Assets: 2  
+
+TOTAL TESTNETS: 7
+
+DETAILED BREAKDOWN
+==================================================
+
+Network: eth-mainnet
+  Chain ID: 1
+  Pool Provider: 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (55):
+    - WETH
+    - wstETH
+    - WBTC
+    - USDC
+    - DAI
+    - LINK
+    - AAVE
+    - cbETH
+    - USDT
+    - rETH
+    ... and 45 more assets
+
+Network: eth-etherfi
+  Chain ID: 1
+  Pool Provider: 0xeBa440B438Ad808101d1c451C1C5322c90BEFCdA
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (4):
+    - weETH
+    - USDC
+    - PYUSD
+    - FRAX
+
+Network: eth-horizon
+  Chain ID: 1
+  Pool Provider: 0x5D39E06b825C1F2B80bf2756a73e28eFAA128ba0
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (8):
+    - GHO
+    - USDC
+    - RLUSD
+    - USTB
+    - USCC
+    - USYC
+    - JTRSY
+    - JAAA
+
+Network: eth-lido
+  Chain ID: 1
+  Pool Provider: 0xcfBf336fe147D643B9Cb705648500e101504B16d
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (9):
+    - wstETH
+    - WETH
+    - USDS
+    - USDC
+    - ezETH
+    - sUSDe
+    - GHO
+    - rsETH
+    - tETH
+
+Network: optimism-mainnet
+  Chain ID: 10
+  Pool Provider: 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb
+  RPC URL: https://opt-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (14):
+    - DAI
+    - LINK
+    - USDC
+    - WBTC
+    - WETH
+    - USDT
+    - AAVE
+    - sUSD
+    - OP
+    - wstETH
+    ... and 4 more assets
+
+Network: bnb-mainnet
+  Chain ID: 56
+  Pool Provider: 0xff75B6da14FfbbfD355Daf7a2731456b3562Ba6D
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (8):
+    - Cake
+    - WBNB
+    - BTCB
+    - ETH
+    - USDC
+    - USDT
+    - FDUSD
+    - wstETH
+
+Network: gnosis-mainnet
+  Chain ID: 100
+  Pool Provider: 0x36616cf17557639614c1cdDb356b1B83fc0B2132
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (9):
+    - WETH
+    - wstETH
+    - GNO
+    - USDC
+    - WXDAI
+    - EURe
+    - sDAI
+    - USDCe
+    - GHO
+
+Network: polygon
+  Chain ID: 137
+  Pool Provider: 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb
+  RPC URL: https://polygon-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (21):
+    - DAI
+    - LINK
+    - USDC
+    - WBTC
+    - WETH
+    - USDT0
+    - AAVE
+    - WPOL
+    - CRV
+    - SUSHI
+    ... and 11 more assets
+
+Network: sonic-mainnet
+  Chain ID: 146
+  Pool Provider: 0x5C2e738F6E27bCE0F7558051Bf90605dD6176900
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (4):
+    - WETH
+    - USDC
+    - wS
+    - stS
+
+Network: zksync-mainnet
+  Chain ID: 324
+  Pool Provider: 0x2A3948BB219D6B2Fa83D64100006391a96bE6cb7
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (8):
+    - USDC
+    - USDT
+    - WETH
+    - wstETH
+    - ZK
+    - weETH
+    - sUSDe
+    - wrsETH
+
+Network: metis-mainnet
+  Chain ID: 1088
+  Pool Provider: 0xB9FABd7500B2C6781c35Dd48d54f81fc2299D7AF
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (5):
+    - mDAI
+    - Metis
+    - mUSDC
+    - mUSDT
+    - WETH
+
+Network: soneium-mainnet
+  Chain ID: 1868
+  Pool Provider: 0x82405D1a189bd6cE4667809C35B37fBE136A4c5B
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (3):
+    - WETH
+    - USDCe
+    - USDT
+
+Network: base-mainnet
+  Chain ID: 8453
+  Pool Provider: 0xe20fCBdBfFC4Dd138cE8b2E6FBb6CB49777ad64D
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (14):
+    - WETH
+    - cbETH
+    - USDbC
+    - wstETH
+    - USDC
+    - weETH
+    - cbBTC
+    - ezETH
+    - GHO
+    - wrsETH
+    ... and 4 more assets
+
+Network: plasma-mainnet
+  Chain ID: 9745
+  Pool Provider: 0x061D8e131F26512348ee5FA42e2DF1bA9d6505E9
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (11):
+    - USDT0
+    - USDe
+    - sUSDe
+    - XAUt0
+    - weETH
+    - WETH
+    - PT_USDe_15JAN2026
+    - PT_sUSDE_15JAN2026
+    - wstETH
+    - wrsETH
+    ... and 1 more assets
+
+Network: arbitrum-mainnet
+  Chain ID: 42161
+  Pool Provider: 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb
+  RPC URL: https://arb-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (20):
+    - DAI
+    - LINK
+    - USDC
+    - WBTC
+    - WETH
+    - USDT
+    - AAVE
+    - EURS
+    - wstETH
+    - MAI
+    ... and 10 more assets
+
+Network: celo-mainnet
+  Chain ID: 42220
+  Pool Provider: 0x9F7Cf9417D5251C59fE94fB9147feEe1aAd9Cea5
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (6):
+    - USDC
+    - USDT
+    - cEUR
+    - cUSD
+    - CELO
+    - WETH
+
+Network: avalanche-fuji
+  Chain ID: 43113
+  Pool Provider: 0x07D04EfAAA0Ac69D19d107795aF247C42Eb50F1C
+  RPC URL: https://avalanche-fuji.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (4):
+    - USDC
+    - EURC
+    - WAVAX
+    - USDX
+
+Network: avalanche-mainnet
+  Chain ID: 43114
+  Pool Provider: 0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb
+  RPC URL: https://avalanche-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (17):
+    - DAIe
+    - LINKe
+    - USDC
+    - WBTCe
+    - WETHe
+    - USDt
+    - AAVEe
+    - WAVAX
+    - sAVAX
+    - FRAX
+    ... and 7 more assets
+
+Network: inkwhitelabel-mainnet
+  Chain ID: 57073
+  Pool Provider: 0x4172E6aAEC070ACB31aaCE343A58c93E4C70f44D
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (5):
+    - WETH
+    - kBTC
+    - USDT
+    - USDG
+    - GHO
+
+Network: linea-mainnet
+  Chain ID: 59144
+  Pool Provider: 0x89502c3731F69DDC95B65753708A07F8Cd0373F4
+  RPC URL: https://eth-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (8):
+    - WETH
+    - WBTC
+    - USDC
+    - USDT
+    - wstETH
+    - ezETH
+    - weETH
+    - wrsETH
+
+Network: base-sepolia
+  Chain ID: 84532
+  Pool Provider: 0xE4C23309117Aa30342BFaae6c95c6478e0A4Ad00
+  RPC URL: https://base-sepolia.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (6):
+    - USDC
+    - USDT
+    - WBTC
+    - WETH
+    - cbETH
+    - LINK
+
+Network: base-sepolialido
+  Chain ID: 84532
+  Pool Provider: 0x6f7E694fe5250Ce638fFE95524760422E6e41997
+  RPC URL: https://base-sepolia.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (5):
+    - USDC
+    - USDT
+    - DAI
+    - WETH
+    - cbETH
+
+Network: arbitrum-sepolia
+  Chain ID: 421614
+  Pool Provider: 0xB25a5D144626a0D488e52AE717A051a2E9997076
+  RPC URL: https://arb-sepolia.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (2):
+    - USDC
+    - WETH
+
+Network: scroll-sepolia
+  Chain ID: 534351
+  Pool Provider: 0x52A27dC690F8652288194Dd2bc523863eBdEa236
+  RPC URL: https://scroll-sepolia.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (8):
+    - DAI
+    - LINK
+    - USDC
+    - WBTC
+    - WETH
+    - USDT
+    - AAVE
+    - EURS
+
+Network: scroll-mainnet
+  Chain ID: 534352
+  Pool Provider: 0x69850D0B276776781C063771b161bd8894BCdD04
+  RPC URL: https://scroll-mainnet.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (5):
+    - WETH
+    - USDC
+    - wstETH
+    - weETH
+    - SCR
+
+Network: eth-sepolia
+  Chain ID: 11155111
+  Pool Provider: 0x012bAC54348C0E635dCAc9D5FB99f06F24136C9A
+  RPC URL: https://eth-sepolia.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (9):
+    - DAI
+    - LINK
+    - USDC
+    - WBTC
+    - WETH
+    - USDT
+    - AAVE
+    - EURS
+    - GHO
+
+Network: optimism-sepolia
+  Chain ID: 11155420
+  Pool Provider: 0x36616cf17557639614c1cdDb356b1B83fc0B2132
+  RPC URL: https://opt-sepolia.g.alchemy.com/v2/-mzDv3YoMPLOiTu2p7I6G...
+  Assets (2):
+    - USDC
+    - WETH
+
+==================================================
+END OF REPORT

@@ -1,10 +1,4 @@
-node_modules
-.env
-__pycache__
-venv
-start_claude.bat
-*.py
-old-python-files
-create_topic.js
-!main.py
 .claude
+start_claude.bat
+.env
+old-python-files
